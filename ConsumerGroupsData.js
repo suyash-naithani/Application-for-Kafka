@@ -1,9 +1,6 @@
 const kafka = require('kafka-node');
 const client = new kafka.KafkaClient();
 const admin = new kafka.Admin(client); 
-const express = require('express')
-const app = express()
-const port = 3000
 var consumerGroupsList =[]
 var consumerGroupsData = {};
 let count =0;
