@@ -1,12 +1,14 @@
-const result = require('./ConsumerGroupsData.js')
+
 const express = require('express')
+const result = require('./ConsumerGroupsData.js')
 const app = express()
-const port = 3000
-var data = result.consumerGroupsInfo()
-app.get('/', (req, res) => {
-    res.send(data)
-  })
-  
-  app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
-  })
+const port = 5000
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*")
+  next()
+})
+
+app.get("/", result.listGroups)
+
+app.listen(port, () => console.log(`Listening on port ${port}`))

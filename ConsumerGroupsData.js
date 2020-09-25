@@ -1,27 +1,45 @@
-const kafka = require('kafka-node');
-const client = new kafka.KafkaClient();
-const admin = new kafka.Admin(client);
-var consumerGroupsList = []
-var consumerGroupsData = {};
-let count = 0;
+const kafka = require("kafka-node");
 
-module.exports.consumerGroupsInfo = function () {
+var listGroups = (request, response) => {
+  const client = new kafka.KafkaClient();
+  const admin = new kafka.Admin(client);
 
+  let groupMetadata = {};
 
-  admin.listGroups((err, res) => {
-    consumerGroupsList = Object.keys(res)
-    consumerGroupsList.forEach(consumerGroup => {
-      admin.describeGroups([consumerGroup], (err, res) => {
-        consumerGroupsData[count] = res;
-        count += 1;
-      })
-    })
+  admin.listGroups((err, resGroups) => {
+    const consumerGroups = Object.keys(resGroups);
 
-  })
+    admin.describeGroups(consumerGroups, (err, resGroupMetadata) => {
+      groupMetadata = getGroupMetadata(resGroupMetadata);
+      response.json(groupMetadata);
+    });
 
-  return consumerGroupsData
-}
+    if (err) {
+      groupMetadata = { error: e };
+    }
+  });
+};
 
+var getGroupMetadata = (resGroupMetadata) => {
+  let groupKeys = Object.keys(resGroupMetadata);
+  let responseGroupData = groupKeys.map((key) => {
+    if (resGroupMetadata.hasOwnProperty(key)) {
+      var val = resGroupMetadata[key];
+      return {
+        groupId: val.groupId,
+        brokerId: val.brokerId,
+        topic: val.members[0].memberMetadata.subscription[0],
+        partition: val.members[0].memberAssignment.partitions,
+      };
+    }
+  });
+  const finalResponse = {
+    results: responseGroupData,
+    count: responseGroupData.count,
+  };
+  return finalResponse;
+};
 
-
-
+module.exports = {
+  listGroups,
+};
